@@ -1,0 +1,57 @@
+1 Introduction to Cache
+-----------------------
+A CPU Cache is Hardware Cache used by the Central Processing Unit(CPU) of a computer to reduce the average cost to access the data from the main memory
+A Cache is faster, smaller and closer to the CPU which stores copies of the data from frequently used main memory locations
+Most CPU has the different and multiple levels of independent caches
+        +] L1 Data Cache (L1d) : To speed up data fetch and store
+        +] L1 Instructions Cache (L1i) : To speed up executable instruction fetch
+        +] L2 Cache
+        +] TLB (Translation Lookaside Buffer) : To speed up virtual-to-physical address translation for both executable instructions and data
+
+Translation Lookaside Buffer (TLB) that is part of the memory management unit (MMU) that most CPUs have
+To be able to optimize a program for efficient processor cache usage some knowledge of how caches work is required
+        a. Processors use un-cached memory regions for low-level I/O
+        b. Some processors can map fast private memory banks into parts of the memory space instead of using a cache
+        c. There may also be special memory access instructions that do not use the cache that can be used in some situations
+        d. This chapter only considers regular memory accesses, and ignores these special cases
+
+-------------------------
+1.1 Motivation for Caches
+-------------------------
+Modern processors can run at clock speeds of several GHz and are able to execute several instructions per clock cycle. This means that a processor may have a peak execution speed of several instructions per nano-second. For example, a 3 GHz processor capable of executing 3 instructions per cycle has a peak execution speed of 9 instructions per ns.
+Modern RAM memories on the other hand are quite slow. And access to RAM memory takes 50 ns or more, causing the processor to stall waiting for the data to arrive. This makes RAM accesses one of the slowest operations a processor can perform. For example, a processor capable of executing 9 instructions per ns could have executed up to 450 instructions in the time it takes to perform a single RAM access with a latency of 50 ns.
+The time it takes to load the data from memory is called the latency of the memory operation. It is usually measured in processor clock cycles or ns.
+Since memory accesses are very common in programs and can account for more than 25% of the instructions, memory access latencies would have a impact on processor execution speed if they could not be avoided in some way.
+To solve this problem computer designers have introduced cache memories, which are small, but extremely fast, memories between the processor and the slow main memory. Frequently used data is automatically copied to the cache memories. This allows well written programs to make most of their memory accesses to the fast cache memory and only rarely make accesses to the slow main memory
+
+------------------------------
+1.2 Cache Lines and Cache Size
+------------------------------
+It could be left up to the programmer or compiler to determine what data should be placed in the cache memories, but this would be complicated since different processors have different numbers of caches and different cache sizes. It would also be hard to determine how much of the cache memory to allocate to each program when several programs are running on the same processor.
+Instead the allocation of space in the cache is managed by the processor. When the processor accesses a part of memory that is not already in the cache it loads a chunk of the memory around the accessed address into the cache, hoping that it will soon be used again.
+The chunks of memory handled by the cache are called cache lines. The size of these chunks is called the cache line size. Common cache line sizes are 32, 64 and 128 bytes.
+A cache can only hold a limited number of lines, determined by the cache size. For example, a 64 kilobyte cache with 64-byte lines has 1024 cache lines
+
+------------------------------
+1.3 Cache Replacement Policies
+------------------------------
+If all the cache lines in the cache are in use when the processor accesses a new line, one of the lines currently in the cache must be evicted to make room for the new line. The policy for selecting which line to evict is called the replacement policy.
+The most common replacement policy in modern processors is LRU, for least recently used. This replacement policy simply evicts the cache line that was least recently used, assuming that the more recently used cache lines are more likely to soon be used again.
+Another replacement policy is random replacement, meaning that a random cache line is selected for eviction
+
+-----------------
+1.4 Cache Entries
+-----------------
+Data is transferred between memory and cache in blocks of fixed size, called cache lines or cache blocks. When a cache line is copied from memory into the cache, a cache entry is created. The cache entry will include the copied data as well as the requested memory location (called a tag).
+When the processor needs to read or write a location in main memory, it first checks for a corresponding entry in the cache. The cache checks for the contents of the requested memory location in any cache lines that might contain that address. If the processor finds that the memory location is in the cache, a cache hit has occurred. However, if the processor does not find the memory location in the cache, a cache miss has occurred. In the case of a cache hit, the processor immediately reads or writes the data in the cache line. For a cache miss, the cache allocates a new entry and copies data from main memory, then the request is fulfilled from the contents of the cache
+
+------------------------
+1.5 Cache Write Policies
+------------------------
+If data is written to the cache, at some point it must also be written to main memory; the timing of this write is known as the write policy. In a write-through cache, every write to the cache causes a write to main memory. Alternatively, in a write-back or copy-back cache, writes are not immediately mirrored to the main memory, and the cache instead tracks which locations have been written over, marking them as dirty. The data in these locations is written back to the main memory only when that data is evicted from the cache. For this reason, a read miss in a write-back cache may sometimes require two memory accesses to service: one to first write the dirty location to main memory, and then another to read the new location from memory. Also, a write to a main memory location that is not yet mapped in a write-back cache may evict an already dirty location, thereby freeing that cache space for the new memory location.
+There are intermediate policies as well. The cache may be write-through, but the writes may be held in a store data queue temporarily, usually so that multiple stores can be processed together (which can reduce bus turnarounds and improve bus utilization).
+
+------------------------
+1.6 TLB (Translation Lookaside Buffer)
+------------------------
+Most modern desktop and server CPUs have at least three independent caches: an instruction cache to speed up executable instruction fetch, a data cache to speed up data fetch and store, and a translation lookaside buffer (TLB) used to speed up virtual-to-physical address translation for both executable instructions and data. A single TLB could be provided for access to both instructions and data, or a separate Instruction TLB (ITLB) and data TLB (DTLB) can be provided.[3] The data cache is usually organized as a hierarchy of more cache levels (L1, L2, etc.; see also multi-level caches below). However, the TLB cache is part of the memory management unit (MMU) and not directly related to the CPU caches
